@@ -13,6 +13,7 @@
 	<name>Project Common</name>
 	<description>Project Common</description>
 	<packaging>jar</packaging>
+	<url>https://github.com/wuxiatech/wuxia-project-common.git</url>
 	<dependencies>
 		<dependency>
 			<groupId>cn.wuxia.common</groupId>
