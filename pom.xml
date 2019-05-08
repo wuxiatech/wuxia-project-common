@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>cn.wuxia.project</groupId>
 		<artifactId>wuxia.project-parent</artifactId>
-		<version>2.0.1</version>
+		<version>2.0.3</version>
 	</parent>
 	<groupId>cn.wuxia.project</groupId>
 	<artifactId>wuxia.project-common</artifactId>
@@ -15,10 +15,6 @@
 	<packaging>jar</packaging>
 	<url>https://github.com/wuxiatech/wuxia-project-common.git</url>
 	<dependencies>
-		<dependency>
-			<groupId>cn.wuxia.common</groupId>
-			<artifactId>wuxia.common</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>cn.wuxia.component</groupId>
 			<artifactId>wuxia.cache-component</artifactId>
@@ -80,11 +76,6 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-mongodb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-elasticsearch</artifactId>
-			<optional>true</optional>
 		</dependency>
 		<!-- 如果使用httpclent则需要引入 -->
 		<dependency>
