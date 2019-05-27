@@ -8,14 +8,15 @@
  */
 package cn.wuxia.project.common.bean;
 
-import cn.wuxia.common.util.BytesUtil;
 import cn.wuxia.common.util.EncodeUtils;
 import cn.wuxia.common.util.JsonUtil;
 import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.common.util.reflection.ReflectionUtil;
+import cn.wuxia.project.common.api.MsgStatusEnum;
 import cn.wuxia.project.common.support.CallbackBeanHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.util.Collection;
  *
  * @param
  */
+@Deprecated
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CallbackBean implements Serializable {
 
@@ -38,7 +40,7 @@ public class CallbackBean implements Serializable {
     /**
      * 默认值
      */
-    private int status = MsgStatus.SUCCESSFUL.status;
+    private int status = MsgStatusEnum.SUCCESSFUL.getStatus();
 
     /**
      * 默认值
@@ -47,42 +49,41 @@ public class CallbackBean implements Serializable {
 
     private CallbackResultType resultType;
 
-    private String encodeResult;
-
-    private Object data;
-
-    private boolean needEncode = true;
+    private String data;
 
     public static CallbackBean ok() {
         return new CallbackBean();
     }
 
-    public static CallbackBean ok(Object object) throws IOException {
-        if (object == null)
-            return new CallbackBean();
-        return new CallbackBean(object, false);
+    public static CallbackBean ok(Serializable object) {
+        return encode(object);
     }
 
-    public static CallbackBean encode(Object object) throws IOException {
-        if (object == null)
+    public static CallbackBean encode(Serializable object) {
+        if (object == null) {
             return new CallbackBean();
-        return new CallbackBean(object, true);
-    }
-    public static CallbackBean okJsonResult(Object object) throws IOException {
-        return okJsonResult(object, true);
+        }
+        if (object instanceof String) {
+            return new CallbackBean((String) object, new CallbackResultType(CallbackResultType.MsgType.TEXT, ""));
+        } else {
+            return new CallbackBean(SerializationUtils.serialize(object), new CallbackResultType(CallbackResultType.MsgType.BYTES, ""));
+        }
     }
 
-    public static CallbackBean okJsonResult(Object object, boolean needEncode) throws IOException {
-        if (object == null)
+
+    public static CallbackBean okJson(Serializable object) {
+        if (object == null) {
             return new CallbackBean();
+        }
         String json = JsonUtil.toJson(object);
 
         if (object instanceof Collection) {
             Class genricType = ReflectionUtil.getSuperClassGenricType(object.getClass());
             return new CallbackBean(json,
-                    new CallbackResultType(CallbackResultType.MsgType.LIST_JSON, genricType != null ? genricType.getName() : ""), needEncode);
-        } else
-            return new CallbackBean(json, new CallbackResultType(CallbackResultType.MsgType.JSON, object.getClass().getName()), needEncode);
+                    new CallbackResultType(CallbackResultType.MsgType.LIST_JSON, genricType != null ? genricType.getName() : ""));
+        } else {
+            return new CallbackBean(json, new CallbackResultType(CallbackResultType.MsgType.JSON, object.getClass().getName()));
+        }
     }
 
     public static CallbackBean ok(byte[] content, String contentType) {
@@ -90,55 +91,35 @@ public class CallbackBean implements Serializable {
     }
 
     public static CallbackBean notok(String message) {
-        return new CallbackBean(message, MsgStatus.SERVER_ERROR);
+        return new CallbackBean(message, MsgStatusEnum.SERVER_ERROR);
     }
 
     public CallbackBean() {
     }
 
-    public CallbackBean(Object object, boolean needEncode) throws IOException {
-        this();
-        Assert.notNull(object, "");
-        if(needEncode) {
-            this.resultType = new CallbackResultType(CallbackResultType.MsgType.BYTES, object.getClass().getName());
-            /**
-             * 作为http传递必须使用带url方法
-             */
-            this.encodeResult = EncodeUtils.base64UrlSafeEncode(BytesUtil.objectToBytes(object));
-        }else{
-            this.resultType = new CallbackResultType(CallbackResultType.MsgType.JSON, object.getClass().getName());
-            this.data = object;
-        }
-    }
 
     public CallbackBean(byte[] content, CallbackResultType resultType) {
         this.resultType = resultType;
         /**
          * 作为http传递必须使用带url方法
          */
-        this.encodeResult = EncodeUtils.base64UrlSafeEncode(content);
+        this.data = EncodeUtils.base64UrlSafeEncode(content);
     }
 
-    public CallbackBean(String content, CallbackResultType resultType, boolean needEncode) {
+    public CallbackBean(String content, CallbackResultType resultType) {
         Assert.notNull(content, "");
         this.resultType = resultType;
         /**
          * 作为http传递必须使用带url方法
          */
-        this.needEncode = needEncode;
-        if (needEncode)
-            this.encodeResult = EncodeUtils.base64UrlSafeEncode(content.getBytes());
-        else this.encodeResult = content;
-    }
+        this.data = EncodeUtils.base64UrlSafeEncode(content.getBytes());
 
-    public CallbackBean(String text) {
-        this(text, new CallbackResultType(CallbackResultType.MsgType.TEXT, ""), false);
     }
 
 
-    public CallbackBean(String message, MsgStatus status) {
+    public CallbackBean(String message, MsgStatusEnum status) {
         this.message = message;
-        this.status = status.status;
+        this.status = status.getStatus();
     }
 
     public int getStatus() {
@@ -157,71 +138,50 @@ public class CallbackBean implements Serializable {
         this.message = message;
     }
 
-    public boolean getNeedEncode() {
-        return needEncode;
-    }
 
-    public void setNeedEncode(boolean needEncode) {
-        this.needEncode = needEncode;
-    }
-
-    public Object getData() {
+    public String getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(String data) {
         this.data = data;
     }
 
     @JsonIgnore
     public byte[] getByteResult() {
-        if (StringUtil.isNotBlank(this.encodeResult)) {
-            if (this.needEncode)
-                return EncodeUtils.base64Decode(this.encodeResult);
-            else
-                return this.encodeResult.getBytes();
-        } else
-            return null;
+        if (StringUtil.isNotBlank(this.data)) {
+            return EncodeUtils.base64Decode(this.data);
+        }
+        return null;
     }
 
-    private void setEncodeResult(String encodeResult) {
-        this.encodeResult = encodeResult;
-    }
-
-    public String getEncodeResult() {
-        return encodeResult;
-    }
 
     @JsonIgnore
     public String getStringResult() {
         if (resultType != null) {
-            switch (resultType.msgType) {
-                case BYTES:
-                    break;
+            switch (resultType.getMsgType()) {
                 case TEXT:
-                    return encodeResult;
                 case JSON:
                 case LIST_JSON:
-                    return new String(getByteResult());
+                    return new String(EncodeUtils.base64Decode(data));
+                default:
+                    break;
             }
         }
         return null;
     }
 
     @JsonIgnore
-    public <T> T getRtnObj() throws IOException, ClassNotFoundException {
+    public <T extends Serializable> T getRtnObj() throws IOException, ClassNotFoundException {
         if (resultType != null) {
-            switch (resultType.msgType) {
+            switch (resultType.getMsgType()) {
                 case BYTES:
+                    return (T) SerializationUtils.deserialize(getByteResult());
+                default:
                     break;
-                case TEXT:
-                    return (T) encodeResult;
-                case JSON:
-                case LIST_JSON:
-                    return (T) new String(getByteResult());
             }
         }
-        return (T) BytesUtil.bytesToObject(getByteResult());
+        return null;
     }
 
     public CallbackResultType getResultType() {
@@ -234,26 +194,9 @@ public class CallbackBean implements Serializable {
 
     @JsonIgnore
     public boolean isok() {
-        return getStatus() == MsgStatus.SUCCESSFUL.status;
+        return getStatus() == MsgStatusEnum.SUCCESSFUL.getStatus();
     }
 
-    public enum MsgStatus {
-        INFORMATIONAL(1), SUCCESSFUL(2), REDIRECTION(3), CLIENT_ERROR(4), SERVER_ERROR(5);
-        private int status;
-
-        MsgStatus(int status) {
-            this.status = status;
-        }
-
-        public int getStatus() {
-            return status;
-        }
-
-        @Override
-        public String toString() {
-            return "" + status;
-        }
-    }
 
     @Override
     public String toString() {

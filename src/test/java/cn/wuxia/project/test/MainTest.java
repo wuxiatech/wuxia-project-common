@@ -9,7 +9,7 @@ import com.aliyuncs.dyvmsapi.model.v20170525.SingleCallByVoiceResponse;
 import com.aliyuncs.exceptions.ClientException;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class QiniuTest {
+public class MainTest {
 
 
     public static void main(String[] args) throws ClientException, InterruptedException {

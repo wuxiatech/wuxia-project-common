@@ -1,9 +1,8 @@
-package cn.wuxia.project.common.bean;
+package cn.wuxia.project.common.api;
 
 import java.io.Serializable;
 
-@Deprecated
-public class CallbackResultType implements Serializable{
+public class RequestTypeEnum implements Serializable{
     private static final long serialVersionUID = 6594809787675651623L;
 
     public enum MsgType {
@@ -14,10 +13,10 @@ public class CallbackResultType implements Serializable{
 
     String contentType;
 
-    public CallbackResultType() {
+    public RequestTypeEnum() {
     }
 
-    public CallbackResultType(MsgType msgType, String contentType) {
+    public RequestTypeEnum(MsgType msgType, String contentType) {
         this.msgType = msgType;
         this.contentType = contentType;
     }

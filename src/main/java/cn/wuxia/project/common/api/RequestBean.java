@@ -6,7 +6,7 @@
  * <Ver.No>     <date>        <who modify>       <reason>
  * Copyright 2014-2020 www.ibmall.cn All right reserved.
  */
-package cn.wuxia.project.common.bean;
+package cn.wuxia.project.common.api;
 
 import cn.wuxia.common.util.JsonUtil;
 import cn.wuxia.common.util.StringUtil;
@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import java.io.Serializable;
 import java.util.Map;
 
+@Deprecated
 public class RequestBean implements Serializable {
     /**
      * Comment for <code>serialVersionUID</code>

@@ -1,17 +1,14 @@
-package cn.wuxia.project.common.support;
+package cn.wuxia.project.common.api;
 
 import cn.wuxia.common.mapper.JacksonMapper;
 import cn.wuxia.common.util.*;
 import cn.wuxia.common.util.reflection.BeanUtil;
 import cn.wuxia.common.web.httpclient.HttpClientException;
-import cn.wuxia.project.common.bean.CallbackBean;
-import cn.wuxia.project.common.bean.CallbackResultType;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,8 +17,8 @@ import java.util.Map;
 /**
  * @author songlin
  */
-public class CallbackBeanHandler {
-    final static Logger logger = LoggerFactory.getLogger(CallbackBeanHandler.class);
+public class ApiRequestHandler {
+    final static Logger logger = LoggerFactory.getLogger(ApiRequestHandler.class);
 
     /**
      * @param callbackBean
@@ -29,7 +26,7 @@ public class CallbackBeanHandler {
      * @throws HttpClientException
      * @author songlin
      */
-    public static String toString(CallbackBean callbackBean) throws IOException {
+    public static String toString(ApiResponseBean callbackBean) {
         return (String) handler(callbackBean, String.class);
     }
 
@@ -40,7 +37,7 @@ public class CallbackBeanHandler {
      * @throws HttpClientException
      * @author songlin
      */
-    public static <T> List<T> toList(CallbackBean callbackBean, Class<T> clazz) throws IOException {
+    public static <T> List<T> toList(ApiResponseBean callbackBean, Class<T> clazz) {
         return (List<T>) handler(callbackBean, clazz);
     }
 
@@ -51,9 +48,8 @@ public class CallbackBeanHandler {
      * @throws HttpClientException
      * @author songlin
      */
-    public static <T> T toBean(CallbackBean callbackBean, Class<T> clazz) throws IOException {
+    public static <T> T toBean(ApiResponseBean callbackBean, Class<T> clazz) {
         return (T) handler(callbackBean, clazz);
-
     }
 
     /**
@@ -62,23 +58,18 @@ public class CallbackBeanHandler {
      * @throws HttpClientException
      * @author songlin
      */
-    public static Map toMap(CallbackBean callbackBean) throws IOException {
+    public static Map toMap(ApiResponseBean callbackBean) {
         return (Map) handler(callbackBean, HashMap.class);
     }
 
-    public static Object handler(CallbackBean callbackBean, Class clazz) throws IOException {
+    public static Object handler(ApiResponseBean callbackBean, Class clazz) {
 
-        if (ArrayUtil.isEmpty(callbackBean.getByteResult())) {
+        if (ArrayUtil.isEmpty(callbackBean.getBytes())) {
             return null;
         }
-        Object o = null;
-        try {
-            o = BytesUtil.bytesToObject(callbackBean.getByteResult());
-        } catch (ClassNotFoundException e) {
-            logger.error(e.getMessage());
-            throw new IOException(e);
-        }
-        CallbackResultType resultType = callbackBean.getResultType();
+        Object o = callbackBean.getObject();
+
+        RequestTypeEnum resultType = callbackBean.getResultType();
         logger.info("result type: 需要转换为类型{}，读取的类型为{}", o.getClass().getName(), resultType);
 
         /**
@@ -161,7 +152,7 @@ public class CallbackBeanHandler {
                     return Lists.newArrayList(list);
                 }
             case TEXT:
-                return callbackBean.getStringResult();
+                return callbackBean.getString();
         }
         /**
          * 其它情况直接返回o对象本身

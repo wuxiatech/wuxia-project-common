@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import cn.wuxia.project.common.bean.CallbackBean;
-import cn.wuxia.project.common.bean.RequestBean;
+import cn.wuxia.project.common.api.ApiResponseBean;
+import cn.wuxia.project.common.api.RequestBean;
 import cn.wuxia.project.common.open.AppApiException;
 import cn.wuxia.common.mapper.JacksonMapper;
 import cn.wuxia.common.util.StringUtil;
@@ -31,7 +31,7 @@ public class ApiUtil {
      * @return
      * @throws Exception
      */
-    public static CallbackBean post2Gateway(RequestBean requestBean, String gateway, Map<String, String> headers, String appkey, String secret)
+    public static ApiResponseBean post2Gateway(RequestBean requestBean, String gateway, Map<String, String> headers, String appkey, String secret)
             throws AppApiException {
         Assert.notNull(gateway, "gateway地址不能为空");
         Assert.notNull(appkey, "APP_KEY不能为空");
@@ -47,7 +47,7 @@ public class ApiUtil {
         HttpClientResponse repos;
         try {
             repos = SignHttpUtil.httpPost(host, path, headers, null, requestBean.toMap(), null, appkey, secret);
-            CallbackBean callbackBean = JacksonMapper.nonEmptyMapper().getMapper().readValue(repos.getByteResult(), CallbackBean.class);
+            ApiResponseBean callbackBean = JacksonMapper.nonEmptyMapper().getMapper().readValue(repos.getByteResult(), ApiResponseBean.class);
             if (callbackBean.isok()) {
                 return callbackBean;
             } else {
