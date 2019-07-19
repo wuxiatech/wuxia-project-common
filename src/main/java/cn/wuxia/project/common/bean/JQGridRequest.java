@@ -6,7 +6,14 @@ import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.orm.query.Sort;
 import cn.wuxia.common.util.JsonUtil;
 import cn.wuxia.common.util.StringUtil;
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * @author songlin
+ */
+@Getter
+@Setter
 public class JQGridRequest {
 
     Boolean _search;// true
@@ -19,63 +26,6 @@ public class JQGridRequest {
     //searchField:
     //searchString:
     //searchOper:
-
-
-    public Boolean get_search() {
-        return _search;
-    }
-
-    public void set_search(Boolean _search) {
-        this._search = _search;
-    }
-
-    public Long getNd() {
-        return nd;
-    }
-
-    public void setNd(Long nd) {
-        this.nd = nd;
-    }
-
-    public Integer getRows() {
-        return rows;
-    }
-
-    public void setRows(Integer rows) {
-        this.rows = rows;
-    }
-
-    public Integer getPage() {
-        return page;
-    }
-
-    public void setPage(Integer page) {
-        this.page = page;
-    }
-
-    public String getSidx() {
-        return sidx;
-    }
-
-    public void setSidx(String sidx) {
-        this.sidx = sidx;
-    }
-
-    public String getSord() {
-        return sord;
-    }
-
-    public void setSord(String sord) {
-        this.sord = sord;
-    }
-
-    public String getFilters() {
-        return filters;
-    }
-
-    public void setFilters(String filters) {
-        this.filters = filters;
-    }
 
 
     public Pages toPages() {

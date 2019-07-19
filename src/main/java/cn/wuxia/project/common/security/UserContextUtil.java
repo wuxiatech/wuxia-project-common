@@ -11,7 +11,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 public class UserContextUtil {
     private static Logger logger = LoggerFactory.getLogger(UserContextUtil.class);
 
-    protected final static String CURRENT_SESSION_WX_USER = "CURRENT_SESSION_USER";
+    protected final static String CURRENT_SESSION_WX_USER = "CURRENT_SESSION_USER:";
 
     protected static Cache cache = CacheSupport.getCache(CacheConstants.CACHED_VALUE_1_HOUR);
 

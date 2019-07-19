@@ -2,12 +2,16 @@ package cn.wuxia.project.common.bean;
 
 import cn.wuxia.common.util.DateUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Date;
 
+@Getter
+@Setter
 public class SimpleFieldProperty implements Serializable {
 
     private static final long serialVersionUID = 3615587405927351190L;
@@ -31,22 +35,6 @@ public class SimpleFieldProperty implements Serializable {
     public SimpleFieldProperty name(String name) {
         setName(name);
         return this;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    public void setValue(Object value) {
-        this.value = value;
     }
 
     @JsonIgnore

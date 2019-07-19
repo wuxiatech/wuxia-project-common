@@ -1,9 +1,9 @@
 package cn.wuxia.project.common.support;
 
-import java.util.Date;
-
 import cn.wuxia.common.util.DateUtil;
 import cn.wuxia.common.util.DateUtil.DateFormatter;
+
+import java.util.Date;
 
 /**
  * 时间处理类
@@ -26,7 +26,7 @@ public class TimeDealer {
         } else if (24 * 60 * 60 * 1000L <= distance && distance < 30 * 24 * 60 * 60 * 1000L) {
             return (int) Math.floor(distance / 60 / 60000 / 24) + "天前";
         } else {
-            return DateUtil.dateToString(paramTime, DateFormatter.FORMAT_YYYYMMDD);
+            return DateUtil.dateToString(paramTime, DateFormatter.FORMAT_YYYY_MM_DD_CN_HH_MM);
         }
     }
 

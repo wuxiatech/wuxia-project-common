@@ -1,7 +1,12 @@
 package cn.wuxia.project.common.bean;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter
+@Setter
 public class JQGridFilter {
 
 
@@ -9,19 +14,4 @@ public class JQGridFilter {
     List<JQGridFilterRules> rules; //[{"field":"mobile","op":"eq","data":"13611464542"}]}
 
 
-    public String getGroupOp() {
-        return groupOp;
-    }
-
-    public void setGroupOp(String groupOp) {
-        this.groupOp = groupOp;
-    }
-
-    public List<JQGridFilterRules> getRules() {
-        return rules;
-    }
-
-    public void setRules(List<JQGridFilterRules> rules) {
-        this.rules = rules;
-    }
 }
