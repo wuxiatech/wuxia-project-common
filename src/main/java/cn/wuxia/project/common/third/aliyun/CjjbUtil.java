@@ -31,7 +31,11 @@ import cn.wuxia.common.util.StringUtil;
  * @ Version : V<Ver.No> <2017年7月14日>
  *  @see https://market.aliyun.com/products/57126001/cmapi011522.html?spm=5176.2020520132.101.29.QFjeap#sku=yuncode552200000
  */
-public class CjjbUtil extends ApiConstants {
+public class CjjbUtil extends BaseMarketApi {
+
+    public CjjbUtil() {
+        super("b915a1e017d04bd48c5b6d64bc9ace7c");
+    }
 
     public static CjjbUtil getInstance(){
         return new  CjjbUtil();

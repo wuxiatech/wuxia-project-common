@@ -1,4 +1,4 @@
-package cn.wuxia.project.common.third.aliyun.bean;
+package cn.wuxia.project.common.third.ip.bean;
 
 
 import cn.wuxia.common.util.StringUtil;

@@ -1,14 +1,15 @@
 /*
-* Created on :8 Oct, 2015
-* Author     :songlin
-* Change History
-* Version       Date         Author           Reason
-* <Ver.No>     <date>        <who modify>       <reason>
-* Copyright 2014-2020 武侠科技 All right reserved.
-*/
-package cn.wuxia.project.common.third.ip;
+ * Created on :8 Oct, 2015
+ * Author     :songlin
+ * Change History
+ * Version       Date         Author           Reason
+ * <Ver.No>     <date>        <who modify>       <reason>
+ * Copyright 2014-2020 武侠科技 All right reserved.
+ */
+package cn.wuxia.project.common.third.ip.chunzhen;
 
 import cn.wuxia.common.util.PropertiesUtils;
+import cn.wuxia.common.util.StringUtil;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -42,11 +43,10 @@ import java.util.List;
  *     1. 每条记录7字节，按照起始地址从小到大排列
  *        a. 起始IP地址，4字节
  *        b. 结束ip地址的绝对偏移，3字节
- * 
+ *
  * 注意，这个文件里的ip地址和所有的偏移量均采用little-endian格式，而java是采用
  * big-endian格式的，要注意转换
  * </pre>
- * 
  */
 public class IPSeeker {
     /**
@@ -71,9 +71,7 @@ public class IPSeeker {
         }
     }
 
-    private final String IP_FILE = PropertiesUtils
-            .loadProperties(new String[] { "classpath:properties/application.properties", "classpath:application.properties" })
-            .getProperty("ipwry.filepath");
+    private String IP_FILE;
 
     // 一些固定常量，比如记录长度等等
     private static final int IP_RECORD_LENGTH = 7;
@@ -83,7 +81,7 @@ public class IPSeeker {
     private static final byte NO_AREA = 0x2;
 
     // 用来做为cache，查询一个ip时首先查看cache，以减少不必要的重复查找
-    private final Hashtable ipCache;
+    private Hashtable ipCache;
 
     // 随机文件访问类
     private RandomAccessFile ipFile;
@@ -91,32 +89,41 @@ public class IPSeeker {
     // 内存映射文件
     private MappedByteBuffer mbb;
 
-    // 单一模式实例
-    private static IPSeeker instance = new IPSeeker();
 
     // 起始地区的开始和结束的绝对偏移
     private long ipBegin, ipEnd;
 
     // 为提高效率而采用的临时变量
-    private final IPLocation loc;
+    private IPLocation loc;
 
-    private final byte[] buf;
+    private byte[] buf;
 
-    private final byte[] b4;
+    private byte[] b4;
 
-    private final byte[] b3;
+    private byte[] b3;
+
+    public IPSeeker(String IP_FILE) {
+        if (StringUtil.isBlank(IP_FILE)) {
+            IP_FILE = PropertiesUtils
+                    .loadProperties(new String[]{"classpath:properties/application.properties", "classpath:application.properties"})
+                    .getProperty("ipwry.filepath");
+        }
+        this.IP_FILE = IP_FILE;
+
+        init(IP_FILE);
+    }
 
     /**
      * 私有构造函数
      */
-    private IPSeeker() {
+    public void init(String IP_FILE) {
         ipCache = new Hashtable();
         loc = new IPLocation();
         buf = new byte[100];
         b4 = new byte[4];
         b3 = new byte[3];
         if (IP_FILE == null) {
-            System.out.println("IP地址信息文件没有找到，请配置application.properties:ipwry.filepath路径");
+            throw new RuntimeException("IP地址信息文件没有找到，请配置application.properties:ipwry.filepath路径");
         } else {
 
             try {
@@ -142,18 +149,11 @@ public class IPSeeker {
         }
     }
 
-    /**
-     * @return 单一实例
-     */
-    public static IPSeeker getInstance() {
-        return instance;
-    }
 
     /**
      * 给定一个地点的不完全名字，得到一系列包含s子串的IP范围记录
-     * 
-     * @param s
-     *            地点子串
+     *
+     * @param s 地点子串
      * @return 包含IPEntry类型的List
      */
     public List getIPEntriesDebug(String s) {
@@ -187,8 +187,7 @@ public class IPSeeker {
     /**
      * 给定一个地点的不完全名字，得到一系列包含s子串的IP范围记录
      *
-     * @param s
-     *            地点子串
+     * @param s 地点子串
      * @return 包含IPEntry类型的List
      */
     public List getIPEntries(String s) {
@@ -251,8 +250,7 @@ public class IPSeeker {
     /**
      * 根据IP得到国家名
      *
-     * @param ip
-     *            ip的字节数组形式
+     * @param ip ip的字节数组形式
      * @return 国家名字符串
      */
     public String getCountry(byte[] ip) {
@@ -275,8 +273,7 @@ public class IPSeeker {
     /**
      * 根据IP得到国家名
      *
-     * @param ip
-     *            IP的字符串形式
+     * @param ip IP的字符串形式
      * @return 国家名字符串
      */
     public String getCountry(String ip) {
@@ -286,8 +283,7 @@ public class IPSeeker {
     /**
      * 根据IP得到地区名
      *
-     * @param ip
-     *            ip的字节数组形式
+     * @param ip ip的字节数组形式
      * @return 地区名字符串
      */
     public String getArea(byte[] ip) {
@@ -310,8 +306,7 @@ public class IPSeeker {
     /**
      * 根据IP得到地区名
      *
-     * @param ip
-     *            IP的字符串形式
+     * @param ip IP的字符串形式
      * @return 地区名字符串
      */
     public String getArea(String ip) {
@@ -321,8 +316,7 @@ public class IPSeeker {
     /**
      * 根据ip搜索ip信息文件，得到IPLocation结构，所搜索的ip参数从类成员ip中得到
      *
-     * @param ip
-     *            要查询的IP
+     * @param ip 要查询的IP
      * @return IPLocation结构
      */
     private IPLocation getIPLocation(byte[] ip) {
@@ -439,10 +433,8 @@ public class IPSeeker {
     /**
      * 把类成员ip和beginIp比较，注意这个beginIp是big-endian的
      *
-     * @param ip
-     *            要查询的IP
-     * @param beginIp
-     *            和被查询IP相比较的IP
+     * @param ip      要查询的IP
+     * @param beginIp 和被查询IP相比较的IP
      * @return 相等返回0，ip大于beginIp则返回1，小于返回-1。
      */
     private int compareIP(byte[] ip, byte[] beginIp) {
@@ -473,8 +465,7 @@ public class IPSeeker {
     /**
      * 这个方法将根据ip的内容，定位到包含这个ip国家地区的记录处，返回一个绝对偏移 方法使用二分法查找。
      *
-     * @param ip
-     *            要查询的IP
+     * @param ip 要查询的IP
      * @return 如果找到了，返回结束IP的偏移，如果没有找到，返回-1
      */
     private long locateIP(byte[] ip) {
@@ -488,7 +479,7 @@ public class IPSeeker {
         else if (r < 0)
             return -1;
         // 开始二分搜索
-        for (long i = ipBegin, j = ipEnd; i < j;) {
+        for (long i = ipBegin, j = ipEnd; i < j; ) {
             m = getMiddleOffset(i, j);
             readIP(m, b4);
             r = compareIP(ip, b4);
@@ -661,7 +652,7 @@ public class IPSeeker {
 
     /**
      * 从内存映射文件的offset位置得到一个0结尾字符串
-     * 
+     *
      * @param offset
      * @return
      */
