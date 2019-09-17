@@ -2,12 +2,12 @@ package cn.wuxia.project.common.third.aliyun;
 
 import cn.wuxia.aliyun.components.ApiAccount;
 import cn.wuxia.common.util.MapUtil;
+import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.common.web.httpclient.HttpAction;
 import cn.wuxia.common.web.httpclient.HttpClientMethod;
 import cn.wuxia.project.common.open.AppApiException;
 import cn.wuxia.project.common.third.aliyun.bean.WeatherCity;
 import cn.wuxia.project.common.third.aliyun.bean.WeatherInfo;
-import cn.wuxia.project.common.third.qiyukf.session.util.StringUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
@@ -41,7 +41,13 @@ public class WeatherUtil extends BaseMarketApi {
     public WeatherInfo query(WeatherCity weatherCity) throws AppApiException {
 
         String resultJson = super.send(queryAction, new HashMap<String, String>(1) {{
-            put("citycode", weatherCity.getCitycode());
+            if (StringUtil.isNotBlank(weatherCity.getCitycode())) {
+                put("citycode", weatherCity.getCitycode());
+            } else if (StringUtil.isNotBlank(weatherCity.getCity())) {
+                put("city", weatherCity.getCity());
+            } else if (StringUtil.isNotBlank(weatherCity.getCityid())) {
+                put("cityid", weatherCity.getCityid());
+            }
         }});
         JSONObject jsonObject = JSONObject.parseObject(resultJson);
         if (!StringUtil.equalsIgnoreCase("ok", MapUtil.getString(jsonObject, "msg"))) {
