@@ -1,9 +1,8 @@
 package cn.wuxia.project.common.bean;
 
-import cn.wuxia.project.common.model.CommonEntityApi;
-import cn.wuxia.project.common.support.CustomDateSerializer;
-import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.util.StringUtil;
+import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
+import cn.wuxia.project.common.support.CustomDateSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.Serializable;
@@ -11,10 +10,10 @@ import java.util.Date;
 
 /**
  * common of data create and modify info
- * 
+ *
  * @author songlin.li
  */
-public abstract class CommonDto extends ValidationEntity implements Serializable, CommonEntityApi {
+public abstract class CommonDto extends AbstractPrimaryKeyEntity<String> implements Serializable {
     private static final long serialVersionUID = -8107269594757837046L;
     /**
      * Comment for <code>serialVersionUID</code>
@@ -38,6 +37,7 @@ public abstract class CommonDto extends ValidationEntity implements Serializable
         }
     }
 
+    @Override
     public String getId() {
         return this.id;
     }

@@ -3,23 +3,7 @@
  */
 package cn.wuxia.project.common.service.impl;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
-
-import com.fasterxml.jackson.databind.util.ClassUtil;
-
-import cn.wuxia.project.common.bean.CommonDto;
-import cn.wuxia.project.common.model.CommonEntity;
-import cn.wuxia.project.common.model.CommonMongoEntity;
-import cn.wuxia.project.common.service.CommonService;
-import cn.wuxia.common.exception.AppServiceException;
+import cn.wuxia.common.exception.AppDaoException;
 import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
@@ -27,6 +11,18 @@ import cn.wuxia.common.orm.query.Sort;
 import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.common.util.reflection.BeanUtil;
 import cn.wuxia.common.util.reflection.ReflectionUtil;
+import cn.wuxia.project.common.bean.CommonDto;
+import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
+import cn.wuxia.project.common.service.CommonService;
+import com.fasterxml.jackson.databind.util.ClassUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * 当返回的对象（泛型对象不是数据库对应的实体或者泛型对象不是CommonEntity/CommonMongoEntity的子类时调用该方法）
@@ -34,7 +30,7 @@ import cn.wuxia.common.util.reflection.ReflectionUtil;
  * @author songlin.li
  * @since 2013-12-3
  */
-public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends CommonEntity, K extends Serializable>
+public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends AbstractPrimaryKeyEntity, K extends Serializable>
         implements CommonService<E, K>, InitializingBean {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -56,7 +52,7 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
      * @author songlin
      * @return
      */
-    private CommonMongoServiceImpl<? extends CommonMongoEntity, K> commonMongoService;
+    private CommonMongoServiceImpl<T, K> commonMongoService;
 
 
     public ApiCommonServiceImpl() {
@@ -76,7 +72,7 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
         logger.info("dtoClass={};entityClass={}", dtoClass, entityClass);
     }
 
-    public ApiCommonServiceImpl(CommonMongoServiceImpl<? extends CommonMongoEntity, K> commonMongoService) {
+    public ApiCommonServiceImpl(CommonMongoServiceImpl<T, K> commonMongoService) {
         this();
         this.commonMongoService = commonMongoService;
         entityClass = ReflectionUtil.getSuperClassGenricType(commonMongoService.getClass());
@@ -99,7 +95,7 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
         return commonService;
     }
 
-    public void setCommonMongoService(CommonMongoServiceImpl<? extends CommonMongoEntity, K> commonMongoService) {
+    public void setCommonMongoService(CommonMongoServiceImpl<T, K> commonMongoService) {
         this.commonMongoService = commonMongoService;
         entityClass = ReflectionUtil.getSuperClassGenricType(commonMongoService.getClass());
         logger.info("dtoClass={};entityClass={}", dtoClass, entityClass);
@@ -111,7 +107,7 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
      * @return
      * @author songlin
      */
-    public CommonMongoServiceImpl<? extends CommonMongoEntity, K> getCommonMongoService() {
+    public CommonMongoServiceImpl<T, K> getCommonMongoService() {
         return commonMongoService;
     }
 
@@ -126,7 +122,7 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
         }
     }
 
-    private Object byId(K id) {
+    private T byId(K id) {
         if (getCommonService() != null) {
             return this.getCommonService().findById(id);
         } else if (getCommonMongoService() != null) {
@@ -135,14 +131,15 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
         return null;
     }
 
+    @Override
     public E findById(K id) {
         Assert.notNull(id, "id不能为空");
 
-        Object source = byId(id);
+        T source = byId(id);
 
-        if (source == null)
+        if (source == null) {
             return null;
-
+        }
         E target = null;
         try {
             target = dtoClass.newInstance();
@@ -155,28 +152,25 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
         return target;
     }
 
+    @Override
     public void delete(K id) {
         Assert.notNull(id, "id不能为空");
         if (getCommonService() != null) {
             this.getCommonService().delete(id);
         } else if (getCommonMongoService() != null) {
-            try {
-                this.getCommonMongoService().delete(id);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            this.getCommonMongoService().delete(id);
         }
-
     }
 
-    public E save(E e) {
+    @Override
+    public E save(E e) throws AppDaoException {
         Assert.notNull(e, "实体对象不能为空");
         try {
             e.validate();
         } catch (ValidateException e1) {
-            throw new AppServiceException("", e1);
+            throw new AppDaoException("", e1);
         }
-        Object target = null;
+        T target = null;
         if (StringUtil.isNotBlank(e.getId())) {
             target = byId((K) e.getId());
         }
@@ -185,35 +179,27 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Common
         }
         BeanUtil.copyPropertiesWithoutNullValues(target, e);
 
-        /**
-         * 检查敏感字
-         */
-        try {
-            if (getCommonService() != null) {
-                ReflectionUtil.invokeMethod(getCommonService(), "save", new Class[]{entityClass}, new Object[]{target});
-                //                this.getCommonDao().saveEntity(target);
-            } else if (getCommonMongoService() != null) {
-                ReflectionUtil.invokeMethod(getCommonMongoService(), "save", new Class[]{entityClass}, new Object[]{target});
-                //                getCommonMongoDao().save( target);
-            }
-        } catch (Exception e1) {
-            logger.error("保存出错", e1);
-            throw new AppServiceException("保存出错", e1);
+        if (getCommonService() != null) {
+//                ReflectionUtil.invokeMethod(getCommonService(), "save", new Class[]{entityClass}, new Object[]{target});
+            this.getCommonService().save(target);
+        } else if (getCommonMongoService() != null) {
+//                ReflectionUtil.invokeMethod(getCommonMongoService(), "save", new Class[]{entityClass}, new Object[]{target});
+            getCommonMongoService().save(target);
         }
-
         BeanUtil.copyProperties(e, target);
 
         return e;
     }
 
-    public void batchSave(Collection<E> entitys) {
+    @Override
+    public void batchSave(Collection<E> entitys) throws AppDaoException {
         for (E e : entitys) {
             save(e);
         }
     }
 
     @Override
-    public E update(E t) {
+    public E update(E t) throws AppDaoException {
         return save(t);
     }
 

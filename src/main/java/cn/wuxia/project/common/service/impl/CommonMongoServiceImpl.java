@@ -3,31 +3,39 @@
  */
 package cn.wuxia.project.common.service.impl;
 
+import cn.wuxia.common.exception.AppDaoException;
+import cn.wuxia.common.exception.AppServiceException;
+import cn.wuxia.common.exception.ValidateException;
+import cn.wuxia.common.orm.query.Conditions;
+import cn.wuxia.common.orm.query.Pages;
+import cn.wuxia.common.orm.query.Sort;
+import cn.wuxia.common.sensitive.ValidtionSensitiveUtil;
+import cn.wuxia.common.util.DateUtil;
+import cn.wuxia.common.util.ListUtil;
+import cn.wuxia.common.util.reflection.ReflectionUtil;
+import cn.wuxia.project.common.dao.CommonMongoDao;
+import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
+import cn.wuxia.project.common.model.ModifyInfoMongoEntity;
+import cn.wuxia.project.common.service.CommonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+
+import javax.validation.constraints.NotNull;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
-
-import cn.wuxia.project.common.service.CommonService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.util.Assert;
-
-import cn.wuxia.project.common.dao.CommonMongoDao;
-import cn.wuxia.project.common.model.CommonMongoEntity;
-import cn.wuxia.common.exception.AppServiceException;
-import cn.wuxia.common.orm.query.Conditions;
-import cn.wuxia.common.orm.query.Pages;
-import cn.wuxia.common.orm.query.Sort;
-import cn.wuxia.common.util.ListUtil;
-import cn.wuxia.common.util.reflection.ReflectionUtil;
-import org.springframework.util.CollectionUtils;
 
 /**
  * 服务基础实现类。
@@ -35,63 +43,76 @@ import org.springframework.util.CollectionUtils;
  * @author songlin.li
  * @since 2013-12-3
  */
-public abstract class CommonMongoServiceImpl<E extends CommonMongoEntity, K extends Serializable> implements CommonService<E, K> {
+public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity, K extends Serializable> extends AbstractServiceImpl<E, K> implements CommonService<E, K> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected abstract CommonMongoDao<E, K> getCommonDao();
 
     @Override
-    public E save(E e) {
+    public E save(E entity) throws AppDaoException {
         try {
-            e.validate();
-            this.getCommonDao().save(e);
-        } catch (Exception e1) {
-            throw new AppServiceException("", e1);
+            ValidtionSensitiveUtil.validate(entity);
+            invokeModifyInfo(entity);
+            this.getCommonDao().save(entity);
+        } catch (ValidateException e1) {
+            throw new AppDaoException(e1.getMessage());
         }
-        return e;
+        return entity;
     }
 
     @Override
-    public void batchSave(Collection<E> collection) {
-        if (CollectionUtils.isEmpty(collection)) {
+    public void batchSave(Collection<E> entitys) throws AppDaoException {
+        if (CollectionUtils.isEmpty(entitys)) {
             logger.warn("保存对象为空！");
             return;
-
         }
-        this.getCommonDao().batchSave(collection);
+        for (E e : entitys) {
+            invokeModifyInfo(e);
+        }
+        try {
+            getCommonDao().batchSave(entitys);
+        } catch (ValidateException e) {
+            throw new AppDaoException(e.getMessage());
+        }
     }
 
     @Override
-    public E update(E e) {
-        try {
-            e.validate();
-            this.getCommonDao().update(e);
-        } catch (Exception e1) {
-            throw new AppServiceException("", e1);
-        }
-
-        return e;
+    public E update(E e) throws AppDaoException {
+        return save(e);
     }
 
     @Override
-    public void delete(E t) {
-        Object o = null;
-        try {
-            o = ReflectionUtil.invokeGetterMethod(t, getIdName(t.getClass()));
-        } catch (IntrospectionException e) {
-            logger.error("获取id值出错", e);
+    public void delete(@NotNull E e) {
+        Assert.notNull(e.getId(), "id不能为空");
+        if (e instanceof ModifyInfoMongoEntity) {
+            ReflectionUtil.invokeSetterMethod(e, ModifyInfoMongoEntity.LOGICAL_DELETE_STATUS_PROPERTY, DateUtil.newInstanceDate(), Timestamp.class);
+            try {
+                this.getCommonDao().update(e);
+            } catch (ValidateException ex) {
+                throw new AppServiceException(ex.getMessage());
+            }
+        } else {
+            this.getCommonDao().delete(e);
         }
-        delete((K) o);
     }
 
     @Override
     public void delete(K k) {
         Assert.notNull(k, "id can't be null");
-        try {
-            this.getCommonDao().deleteById(k);
-        } catch (Exception e) {
-            throw new AppServiceException("", e);
+        /**
+         * 逻辑删
+         */
+        if (getCommonDao().getEntityClass().isAssignableFrom(ModifyInfoMongoEntity.class)) {
+            Query query = new Query(Criteria.where("id").is(k));
+            Update update = Update.update(ModifyInfoMongoEntity.LOGICAL_DELETE_STATUS_PROPERTY, DateUtil.newInstanceDate());
+            this.getCommonDao().update(query, update);
+        } else {
+            try {
+                this.getCommonDao().deleteById(k);
+            } catch (Exception e) {
+                throw new AppServiceException("", e);
+            }
         }
     }
 
@@ -152,6 +173,7 @@ public abstract class CommonMongoServiceImpl<E extends CommonMongoEntity, K exte
         pages.setAutoCount(false);
         return findAll(pages).getResult();
     }
+
     @Override
     public Pages<E> findAll(Pages<E> pages) {
         return this.getCommonDao().findPage(pages);

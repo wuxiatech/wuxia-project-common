@@ -3,14 +3,15 @@
  */
 package cn.wuxia.project.common.service;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-
 import cn.wuxia.common.entity.ValidationEntity;
+import cn.wuxia.common.exception.AppDaoException;
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.orm.query.Sort;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * 服务基础接口类。
@@ -22,23 +23,26 @@ public interface CommonService<E extends ValidationEntity, K extends Serializabl
 
     /**
      * 保存对象
+     *
      * @param t
      * @return
      */
-    public E save(E t);
+    public E save(E t) throws AppDaoException;
 
     /**
      * 批量保存
+     *
      * @param collection
      */
-    public void batchSave(Collection<E> collection);
+    public void batchSave(Collection<E> collection) throws AppDaoException;
 
     /**
      * 和save一致
+     *
      * @param t
      * @return
      */
-    public E update(E t);
+    public E update(E t) throws AppDaoException;
 
     public void delete(E t);
 

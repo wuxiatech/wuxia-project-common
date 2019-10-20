@@ -13,7 +13,7 @@ import java.sql.Timestamp;
  */
 @Embeddable
 @MappedSuperclass
-public class ModifyInfoEntity extends BaseUuidEntity implements Serializable {
+public class ModifyInfoAutoIdEntity extends BaseAutoIdEntity implements Serializable {
 	/**
 	 * Comment for <code>serialVersionUID</code>
 	 */
@@ -30,14 +30,12 @@ public class ModifyInfoEntity extends BaseUuidEntity implements Serializable {
 	protected Timestamp isObsoleteDate;
 
 	public final static String ISOBSOLETE_DATE_IS_NULL = " is_Obsolete_Date is null ";
-	public final static String LOGICAL_DELETE_STATUS_PROPERTY = "isObsoleteDate";
-	public final static String LOGICAL_DELETE_STATUS_COLUMN = "is_Obsolete_Date";
 
-	public ModifyInfoEntity() {
+	public ModifyInfoAutoIdEntity() {
 		super();
 	}
 
-	public ModifyInfoEntity(String id) {
+	public ModifyInfoAutoIdEntity(Long id) {
 		super(id);
 	}
 

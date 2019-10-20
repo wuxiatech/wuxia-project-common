@@ -20,7 +20,14 @@ public class CacheConstants extends cn.wuxia.common.Constants {
 
     public final static String CACHED_VALUE_1_DAY = "1DayData";
 
-    public final static String CACHED_KEY_DEFAULT = "#root.targetClass +'.'+ #root.methodName";
-
-    public final static String CACHED_KEY_CLASS = "#root.targetClass +'.'+";
+    /**
+     * 避免key过长
+     */
+    //    public final static String CACHED_KEY_DEFAULT = "#root.targetClass +'.'+ #root.methodName";
+    public final static String CACHED_KEY_DEFAULT = "#root.target.getClass().getSimpleName()+':'+ #root.methodName";
+    /**
+     * 避免key过长
+     */
+    //    public final static String CACHED_KEY_CLASS = "#root.targetClass +'.'+";
+    public final static String CACHED_KEY_CLASS = "#root.target.getClass().getSimpleName()+':'+";
 }

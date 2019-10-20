@@ -21,7 +21,8 @@ public class IpUtil {
                 ip = StringUtil.trimBlank(ips[1]);
             }
             String url = "http://ip.ws.126.net/ipquery?ip=" + ip;
-            HttpClientResponse response = HttpClientRequest.get(url).setConnectionTimeout(2000).execute();
+            HttpClientResponse response = HttpClientRequest.get(url)
+                    .setConnectionTimeout(2000).execute();
             String responseString = response.getStringResult();
             responseString = StringUtil.substringBetween(responseString, "{", "}");
             if (StringUtil.isNotBlank(responseString)) {
@@ -41,9 +42,11 @@ public class IpUtil {
     }
 
     /**
+     * 20190909不能继续访问，放弃该方法
      * @param ip
      * @return
      */
+    @Deprecated
     public static IpAdress bytool(@NotBlank String ip) {
         try {
             String[] ips = StringUtil.split(ip, ",");
@@ -97,6 +100,7 @@ public class IpUtil {
         }
         return by126(ip);
     }
+
 
     /**
      * 最后的备份使用方法，使用本地纯真数据库

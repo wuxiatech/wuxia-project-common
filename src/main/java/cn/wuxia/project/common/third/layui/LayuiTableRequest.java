@@ -1,9 +1,8 @@
-package cn.wuxia.project.common.bean;
+package cn.wuxia.project.common.third.layui;
 
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.util.StringUtil;
-import cn.wuxia.project.common.third.layui.LayuiTableRequest;
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,13 +15,11 @@ import java.util.Map;
 
 /**
  * @author songlin
- * @see {@link LayuiTableRequest}
  */
 @Getter
 @Setter
 @NoArgsConstructor
-@Deprecated
-public class LayuiRequest implements Serializable {
+public class LayuiTableRequest implements Serializable {
     int page;
     int limit;
     List<Conditions> conditions = Lists.newArrayList();

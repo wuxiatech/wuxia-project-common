@@ -1,13 +1,12 @@
 package cn.wuxia.project.common.model;
 
-import java.io.Serializable;
-
+import cn.wuxia.common.util.StringUtil;
 import org.springframework.data.annotation.Id;
 
-import cn.wuxia.common.entity.ValidationEntity;
-import cn.wuxia.common.util.StringUtil;
-
-public class CommonMongoEntity extends ValidationEntity implements Serializable, CommonEntityApi {
+/**
+ * @author songlin
+ */
+public class CommonMongoEntity extends AbstractPrimaryKeyEntity<String> {
 
 
     private static final long serialVersionUID = -2510725762307951081L;
@@ -15,6 +14,7 @@ public class CommonMongoEntity extends ValidationEntity implements Serializable,
     protected String id;
 
 
+    @Override
     @Id
     public String getId() {
         return id;

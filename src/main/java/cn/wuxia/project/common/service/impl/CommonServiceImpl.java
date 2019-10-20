@@ -3,27 +3,20 @@
  */
 package cn.wuxia.project.common.service.impl;
 
-import java.beans.IntrospectionException;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
-
-import cn.wuxia.project.common.dao.CommonDao;
-import cn.wuxia.project.common.service.CommonService;
-import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.exception.AppDaoException;
-import cn.wuxia.common.exception.AppServiceException;
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.orm.query.Sort;
-import cn.wuxia.common.util.HibernateUtils;
 import cn.wuxia.common.util.ListUtil;
-import cn.wuxia.common.util.reflection.ReflectionUtil;
+import cn.wuxia.project.common.dao.CommonDao;
+import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
+import cn.wuxia.project.common.model.ModifyInfoEntity;
+import cn.wuxia.project.common.service.CommonService;
+import org.springframework.util.Assert;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * 服务基础实现类。
@@ -31,49 +24,51 @@ import cn.wuxia.common.util.reflection.ReflectionUtil;
  * @author songlin.li
  * @since 2013-12-3
  */
-@Transactional
-public abstract class CommonServiceImpl<E extends ValidationEntity, K extends Serializable> implements CommonService<E, K> {
+public abstract class CommonServiceImpl<E extends AbstractPrimaryKeyEntity, K extends Serializable>extends AbstractServiceImpl<E, K> implements CommonService<E, K> {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected abstract CommonDao<E, K> getCommonDao();
 
     @Override
-    public E save(E e) {
-        try {
-            this.getCommonDao().saveEntity(e);
-        } catch (AppDaoException e1) {
-            throw new AppServiceException("", e1);
-        }
+    public E save(E e) throws AppDaoException {
+        invokeModifyInfo(e);
+        this.getCommonDao().saveEntity(e);
         return e;
     }
 
     @Override
-    public void batchSave(Collection<E> collection) {
-        this.getCommonDao().batchSave(collection);
+    public void batchSave(Collection<E> entitys) throws AppDaoException {
+        Assert.notEmpty(entitys, "保存对象不能为空");
+        for (E e : entitys) {
+            invokeModifyInfo(e);
+        }
+        this.getCommonDao().batchSave(entitys);
     }
 
     @Override
-    public E update(E e) {
+    public E update(E e) throws AppDaoException {
         return save(e);
     }
 
     @Override
-    public void delete(E t) {
-        Object o = null;
-        try {
-            o = ReflectionUtil.invokeGetterMethod(t, HibernateUtils.getIdName(t.getClass()));
-        } catch (IntrospectionException e) {
-            logger.error("获取id值出错", e);
+    public void delete(E e) {
+        if (e instanceof ModifyInfoEntity) {
+            getCommonDao().deleteByLogical((K) e.getId());
+        } else {
+            getCommonDao().delete(e);
         }
-        delete((K) o);
     }
 
     @Override
     public void delete(K k) {// throws Exception {
         Assert.notNull(k, "id can't be null");
-        this.getCommonDao().deleteEntityById(k);
+        if (getCommonDao().getEntityClass().isAssignableFrom(ModifyInfoEntity.class)) {
+            this.getCommonDao().deleteByLogical(k);
+        } else {
+            this.getCommonDao().delete(k);
+        }
     }
+
 
     @Override
     public void evict(E e) {
@@ -132,4 +127,6 @@ public abstract class CommonServiceImpl<E extends ValidationEntity, K extends Se
         pages.setAutoCount(false);
         return this.getCommonDao().findAll(pages).getResult();
     }
+
+
 }

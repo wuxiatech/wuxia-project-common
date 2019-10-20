@@ -1,16 +1,13 @@
 package cn.wuxia.project.common.dao;
 
-import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.exception.AppDaoException;
 import cn.wuxia.common.exception.AppServiceException;
 import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.hibernate.dao.BasicHibernateDao;
 import cn.wuxia.common.sensitive.ValidtionSensitiveUtil;
-import cn.wuxia.common.util.*;
-import cn.wuxia.common.util.reflection.BeanUtil;
-import cn.wuxia.common.util.reflection.ReflectionUtil;
-import cn.wuxia.project.common.model.ModifyInfoEntity;
-import cn.wuxia.project.common.security.UserContextUtil;
+import cn.wuxia.common.util.ListUtil;
+import cn.wuxia.common.util.StringUtil;
+import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -20,15 +17,11 @@ import org.springframework.orm.hibernate5.SessionFactoryUtils;
 import org.springframework.util.Assert;
 
 import javax.persistence.Table;
-import java.beans.IntrospectionException;
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 基础Dao。
@@ -36,12 +29,13 @@ import java.util.regex.Pattern;
  * @author songlin.li
  * @since 2013-6-19
  */
-public abstract class CommonDao<T extends ValidationEntity, PK extends Serializable> extends BasicHibernateDao<T, PK> implements DaoInterface {
+public abstract class CommonDao<T extends AbstractPrimaryKeyEntity, PK extends Serializable> extends BasicHibernateDao<T, PK> implements CommonDaoInterface {
     private JdbcTemplate jdbcTemplate;
 
     /**
      * 不同的数据源使用不同的sessionFactory(名字不同)
      */
+    @Override
     @Autowired
     public void setSessionFactory(final SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
@@ -49,74 +43,16 @@ public abstract class CommonDao<T extends ValidationEntity, PK extends Serializa
     }
 
     protected JdbcTemplate getJdbcTemplate() {
-        if (jdbcTemplate == null)
+        if (jdbcTemplate == null) {
             this.jdbcTemplate = new JdbcTemplate(SessionFactoryUtils.getDataSource(sessionFactory));
+        }
         return jdbcTemplate;
     }
 
-    /**
-     * @param k
-     * @return
-     * @author songlin
-     */
-    public T findById(PK k) {
-        Assert.notNull(k, "id不能为空");
-        return get(k);
-    }
-
-    @Override
-    public void save(T e) {
-        try {
-            saveEntity(e);
-        } catch (AppDaoException e1) {
-            throw new AppServiceException("保存有误", e1);
-        }
-    }
 
     @Override
     public void saveEntity(T e) throws AppDaoException {
         Assert.notNull(e, "实体对象不能为空");
-        try {
-            String idname = HibernateUtils.getIdName(entityClass);
-            Object idvalue = ReflectionUtil.invokeGetterMethod(e, idname);
-
-            /**
-             * 有与框架的及部署的原因，并非在当前线程中可以拿得到用户信息，比如dubbox及webservice
-             * 可以在consumer层set值
-             */
-            if (e instanceof ModifyInfoEntity) {
-                String username = null;
-                if (StringUtil.isBlank(username) && UserContextUtil.getUserContext() != null) {
-                    username = UserContextUtil.getName();
-                }
-                ModifyInfoEntity infoEntity = new ModifyInfoEntity();
-                BeanUtil.copyProperties(infoEntity, e);
-                Timestamp time = DateUtil.newInstanceDate();
-
-                if (StringUtil.isNotBlank(idvalue)) {
-                    if (StringUtil.isNotBlank(username)) {
-                        infoEntity.setModifiedBy(filterEmoji(username));
-                    }
-                    infoEntity.setModifiedOn(time);
-                    if (infoEntity.getCreatedOn() == null) {
-                        infoEntity.setCreatedOn(time);
-                    }
-                } else {
-                    String modifiedBy = infoEntity.getModifiedBy();
-                    if (StringUtil.isNotBlank(username)) {
-                        infoEntity.setCreatedBy(filterEmoji(username));
-                    } else if (StringUtil.isNotBlank(modifiedBy)) {
-                        infoEntity.setCreatedBy(filterEmoji((String) modifiedBy));
-                        infoEntity.setModifiedBy(null);
-                    }
-                    infoEntity.setCreatedOn(time);
-                }
-                BeanUtil.copyProperties(e, infoEntity);
-
-            }
-        } catch (Exception ex) {
-            logger.warn(ex.getMessage(), ex);
-        }
         try {
             ValidtionSensitiveUtil.validate(e);
             super.saveEntity(e);
@@ -125,89 +61,21 @@ public abstract class CommonDao<T extends ValidationEntity, PK extends Serializa
         }
     }
 
-    /**
-     * 临时解决方法，后续数据库createdBy,modifiedBy字段可以升级为utf8mb4
-     * 当前是为了兼容旧数据库
-     *
-     * @param source
-     * @return
-     * @author songlin
-     */
-    private String filterEmoji(String source) {
-        if (source != null) {
-            Pattern emoji = Pattern.compile("[\ud83c\udc00-\ud83c\udfff]|[\ud83d\udc00-\ud83d\udfff]|[\u2600-\u27ff]",
-                    Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE);
-            Matcher emojiMatcher = emoji.matcher(source);
-            if (emojiMatcher.find()) {
-                source = emojiMatcher.replaceAll("*");
-                return source;
-            }
-            return source;
-        }
-        return source;
-    }
-
     @Override
     public void batchSave(Collection<T> entitys) {
         if (ListUtil.isEmpty(entitys)) {
             return;
         }
-        Collection<ValidateException> exs = new ArrayList<ValidateException>();
-        String idname = null;
-        try {
-            idname = HibernateUtils.getIdName(entityClass);
-        } catch (IntrospectionException e2) {
-            logger.warn(e2.getMessage());
-        }
-        for (T e : entitys) {
+        Collection<String> exs = new ArrayList<String>(entitys.size());
+        for (T entity : entitys) {
             try {
-
-                Object idvalue = ReflectionUtil.invokeGetterMethod(e, idname);
-
-                /**
-                 * 有与框架的及部署的原因，并非在当前线程中可以拿得到用户信息，比如dubbox及webservice
-                 * 可以在consumer层set值
-                 */
-                if (e instanceof ModifyInfoEntity) {
-                    String username = null;
-                    if (StringUtil.isBlank(username) && UserContextUtil.getUserContext() != null) {
-                        username = UserContextUtil.getName();
-                    }
-                    ModifyInfoEntity infoEntity = new ModifyInfoEntity();
-                    BeanUtil.copyProperties(infoEntity, e);
-                    Timestamp time = DateUtil.newInstanceDate();
-
-                    if (StringUtil.isNotBlank(idvalue)) {
-                        if (StringUtil.isNotBlank(username)) {
-                            infoEntity.setModifiedBy(filterEmoji(username));
-                        }
-                        infoEntity.setModifiedOn(time);
-                    } else {
-                        String modifiedBy = infoEntity.getModifiedBy();
-                        if (StringUtil.isNotBlank(username)) {
-                            infoEntity.setCreatedBy(filterEmoji(username));
-                        } else if (StringUtil.isNotBlank(modifiedBy)) {
-                            infoEntity.setCreatedBy(filterEmoji((String) modifiedBy));
-                            infoEntity.setModifiedBy(null);
-                        }
-                        infoEntity.setCreatedOn(time);
-                    }
-                    BeanUtil.copyProperties(e, infoEntity);
-                }
-            } catch (Exception ex) {
-                logger.warn(ex.getMessage(), ex);
-            }
-            try {
-                e.validate();
-                ValidtionSensitiveUtil.validate(e);
-            } catch (ValidateException e1) {
-                logger.error("保存有误", e1);
-                exs.add(e1);
-                continue;
+                entity.validate();
+            } catch (ValidateException e) {
+                exs.add(entity.getId() + "：" + e.getMessage());
             }
         }
-        if (!exs.isEmpty()) {
-            throw new AppServiceException("参数有误");
+        if (ListUtil.isNotEmpty(exs)) {
+            throw new AppServiceException(StringUtil.join(exs, "/n"));
         }
         super.batchSave(entitys);
     }
@@ -218,12 +86,12 @@ public abstract class CommonDao<T extends ValidationEntity, PK extends Serializa
      * @return
      * @author songlin.li
      */
-    @Override
-    public T getEntityById(final Serializable id) {
+    public T findByIdIncludeLogicalDelete(final PK id) {
         Table table = entityClass.getAnnotation(Table.class);
         String schema = "";
-        if (table != null && StringUtil.isNotBlank(table.schema()))
+        if (table != null && StringUtil.isNotBlank(table.schema())) {
             schema = table.schema() + ".";
+        }
         String sql = "select * from " + schema + table.name() + " where " + getIdName() + "= ?";
         return queryUnique(sql, entityClass, id);
     }
@@ -235,8 +103,7 @@ public abstract class CommonDao<T extends ValidationEntity, PK extends Serializa
      * @param id
      * @author songlin.li
      */
-    @Override
-    public void deleteEntityById(final Serializable id) {
+    public void deleteByLogical(final PK id) {
         Assert.notNull(id, "id Can not be null");
         String hql = "update " + entityClass.getSimpleName() + " set isObsoleteDate = ? where " + getIdName() + "= ?";
         createQuery(hql, new Date(), id).executeUpdate();
@@ -283,17 +150,5 @@ public abstract class CommonDao<T extends ValidationEntity, PK extends Serializa
         return entityClass;
     }
 
-    /**
-     * 简单判断是否存在spring-security
-     *
-     * @return
-     */
-    public boolean hasSpringSecurity() {
-        try {
-            Class clazz = ClassLoaderUtil.loadClass("org.springframework.security.core.Authentication");
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
+
 }

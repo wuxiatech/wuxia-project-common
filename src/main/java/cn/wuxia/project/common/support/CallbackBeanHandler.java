@@ -20,6 +20,7 @@ import java.util.Map;
 /**
  * @author songlin
  */
+@Deprecated
 public class CallbackBeanHandler {
     final static Logger logger = LoggerFactory.getLogger(CallbackBeanHandler.class);
 

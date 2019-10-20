@@ -24,6 +24,7 @@ public class ModifyInfoMongoEntity extends CommonMongoEntity implements Serializ
 
     protected Date isObsoleteDate;
 
+    public final static String LOGICAL_DELETE_STATUS_PROPERTY = "isObsoleteDate";
     public ModifyInfoMongoEntity() {
 
     }

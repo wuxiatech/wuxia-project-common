@@ -1,6 +1,5 @@
-package cn.wuxia.project.common.bean;
+package cn.wuxia.project.common.third.layui;
 
-import cn.wuxia.project.common.third.layui.LayuiTableDatasource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,13 +9,11 @@ import java.util.List;
 
 /**
  * @author songlin
- * @see {@link LayuiTableDatasource}
  */
 @Getter
 @Setter
 @NoArgsConstructor
-@Deprecated
-public class LayuiResult implements Serializable {
+public class LayuiTableDatasource implements Serializable {
     private static final long serialVersionUID = -4923773355694982750L;
     int code;
     String msg;
@@ -24,17 +21,17 @@ public class LayuiResult implements Serializable {
     Object data;
 
 
-    public LayuiResult(long count, List data) {
+    public LayuiTableDatasource(long count, List data) {
         this.count = count;
         this.data = data;
     }
 
-    LayuiResult(Object data) {
+    LayuiTableDatasource(Object data) {
         this.data = data;
     }
 
-    public static LayuiResult data(Object data) {
-        return new LayuiResult(data);
+    public static LayuiTableDatasource data(Object data) {
+        return new LayuiTableDatasource(data);
     }
 
 }

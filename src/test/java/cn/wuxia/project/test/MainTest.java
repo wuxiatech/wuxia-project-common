@@ -8,6 +8,7 @@ import com.aliyuncs.dyvmsapi.model.v20170525.IvrCallResponse;
 import com.aliyuncs.dyvmsapi.model.v20170525.SingleCallByVoiceResponse;
 import com.aliyuncs.exceptions.ClientException;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.junit.Test;
 
 public class MainTest {
 
@@ -65,5 +66,8 @@ public class MainTest {
 
     }
 
-
+@Test
+    public void test(){
+        TestBean testBean = new TestBean();
+    }
 }
