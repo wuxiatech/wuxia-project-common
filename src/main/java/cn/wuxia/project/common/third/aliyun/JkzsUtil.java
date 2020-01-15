@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.wuxia.project.common.third.aliyun.bean.HealthCategory;
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import cn.wuxia.project.common.third.aliyun.bean.HealthDetail;
 import cn.wuxia.common.util.JsonUtil;

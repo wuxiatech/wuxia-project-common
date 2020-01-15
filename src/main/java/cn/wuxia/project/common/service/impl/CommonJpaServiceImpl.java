@@ -6,11 +6,8 @@ package cn.wuxia.project.common.service.impl;
 import cn.wuxia.common.exception.AppDaoException;
 import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.orm.query.Conditions;
+import cn.wuxia.common.orm.query.MatchType;
 import cn.wuxia.common.orm.query.Pages;
-import cn.wuxia.common.orm.query.PropertyType;
-import cn.wuxia.common.sensitive.ValidtionSensitiveUtil;
-import cn.wuxia.common.spring.orm.core.PropertyFilter;
-import cn.wuxia.common.spring.orm.core.RestrictionNames;
 import cn.wuxia.common.util.DateUtil;
 import cn.wuxia.common.util.ListUtil;
 import cn.wuxia.common.util.StringUtil;
@@ -19,7 +16,6 @@ import cn.wuxia.project.common.dao.CommonJpaDao;
 import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
 import cn.wuxia.project.common.model.ModifyInfoEntity;
 import cn.wuxia.project.common.service.CommonService;
-import com.google.common.collect.Lists;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;
@@ -46,7 +42,6 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
     public E save(E e) throws AppDaoException {
         Assert.notNull(e, "实体对象不能为空");
         try {
-            ValidtionSensitiveUtil.validate(e);
             e.validate();
         } catch (ValidateException ex) {
             throw new AppDaoException(ex.getMessage());
@@ -67,7 +62,6 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
         for (E e : entitys) {
             try {
                 e.validate();
-                ValidtionSensitiveUtil.validate(e);
             } catch (ValidateException e1) {
                 logger.error("参数有误", e1);
                 exs.add(e1.getMessage());
@@ -104,10 +98,6 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
         delete(e);
     }
 
-    @Override
-    public void evict(E e) {
-
-    }
 
     @Override
     public E findById(K k) {
@@ -134,14 +124,7 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
     @Override
     public List<E> findIn(String property, Object... value) {
         Assert.notNull(property, "property name can not be null");
-        List<PropertyFilter> filters = Lists.newArrayList();
-        PropertyFilter filter = new PropertyFilter();
-        filter.setRestrictionName(RestrictionNames.IN);
-        filter.setPropertyType(PropertyType.S.getValue());
-        filter.setPropertyNames(new String[]{property});
-        filter.setMatchValue(StringUtil.join(value, ","));
-        filters.add(filter);
-        return this.getCommonJpaDao().findBy(filters);
+        return this.getCommonJpaDao().findBy(new Conditions(property, MatchType.IN, value));
     }
 
     @Override
@@ -153,6 +136,7 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
     public List<E> findAll(cn.wuxia.common.orm.query.Sort sort) {
         Pages page = new Pages();
         page.setSort(sort);
+        page.setAutoCount(false);
         return findAll(page).getResult();
     }
 
@@ -163,17 +147,11 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
 
     @Override
     public List<E> find(Conditions... conditions) {
-        Pages page = new Pages();
-        page.setConditions(ListUtil.arrayToList(conditions));
-        return findAll(page).getResult();
-
+        return this.getCommonJpaDao().findBy(conditions);
     }
 
     @Override
     public List<E> find(cn.wuxia.common.orm.query.Sort sort, Conditions... conditions) {
-        Pages page = new Pages();
-        page.setSort(sort);
-        page.setConditions(ListUtil.arrayToList(conditions));
-        return findAll(page).getResult();
+        return this.getCommonJpaDao().findBy(ListUtil.arrayToList(conditions), sort);
     }
 }

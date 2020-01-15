@@ -16,7 +16,7 @@ import java.util.Map;
 import cn.wuxia.project.common.third.aliyun.bean.DiseaseDetail;
 import cn.wuxia.project.common.third.aliyun.bean.DiseaseType;
 import cn.wuxia.project.common.third.aliyun.bean.SearchDiseasePageBean;
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import cn.wuxia.common.util.JsonUtil;
 import cn.wuxia.common.util.ListUtil;

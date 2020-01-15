@@ -1,11 +1,6 @@
 package cn.wuxia.project.common.dao;
 
-import cn.wuxia.common.exception.AppDaoException;
-import cn.wuxia.common.exception.AppServiceException;
-import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.hibernate.dao.BasicHibernateDao;
-import cn.wuxia.common.sensitive.ValidtionSensitiveUtil;
-import cn.wuxia.common.util.ListUtil;
 import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
 import org.hibernate.SessionFactory;
@@ -18,8 +13,6 @@ import org.springframework.util.Assert;
 
 import javax.persistence.Table;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -47,37 +40,6 @@ public abstract class CommonDao<T extends AbstractPrimaryKeyEntity, PK extends S
             this.jdbcTemplate = new JdbcTemplate(SessionFactoryUtils.getDataSource(sessionFactory));
         }
         return jdbcTemplate;
-    }
-
-
-    @Override
-    public void saveEntity(T e) throws AppDaoException {
-        Assert.notNull(e, "实体对象不能为空");
-        try {
-            ValidtionSensitiveUtil.validate(e);
-            super.saveEntity(e);
-        } catch (ValidateException e1) {
-            throw new AppDaoException(e1);
-        }
-    }
-
-    @Override
-    public void batchSave(Collection<T> entitys) {
-        if (ListUtil.isEmpty(entitys)) {
-            return;
-        }
-        Collection<String> exs = new ArrayList<String>(entitys.size());
-        for (T entity : entitys) {
-            try {
-                entity.validate();
-            } catch (ValidateException e) {
-                exs.add(entity.getId() + "：" + e.getMessage());
-            }
-        }
-        if (ListUtil.isNotEmpty(exs)) {
-            throw new AppServiceException(StringUtil.join(exs, "/n"));
-        }
-        super.batchSave(entitys);
     }
 
     /**

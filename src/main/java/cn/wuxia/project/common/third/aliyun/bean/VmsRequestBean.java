@@ -1,10 +1,10 @@
 package cn.wuxia.project.common.third.aliyun.bean;
 
-import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.util.MapUtil;
+import cn.wuxia.common.validator.ValidationEntity;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import java.util.Map;
 

@@ -256,10 +256,5 @@ public abstract class ApiCommonServiceImpl<E extends CommonDto, T extends Abstra
         return null;
     }
 
-    @Override
-    public void evict(E t) {
-        // TODO Auto-generated method stub
-
-    }
 
 }

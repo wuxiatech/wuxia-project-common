@@ -9,9 +9,9 @@ import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.orm.query.Sort;
-import cn.wuxia.common.sensitive.ValidtionSensitiveUtil;
 import cn.wuxia.common.util.DateUtil;
 import cn.wuxia.common.util.ListUtil;
+import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.common.util.reflection.ReflectionUtil;
 import cn.wuxia.project.common.dao.CommonMongoDao;
 import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
@@ -34,6 +34,7 @@ import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity,
     @Override
     public E save(E entity) throws AppDaoException {
         try {
-            ValidtionSensitiveUtil.validate(entity);
+            entity.validate();
             invokeModifyInfo(entity);
             this.getCommonDao().save(entity);
         } catch (ValidateException e1) {
@@ -67,14 +68,19 @@ public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity,
             logger.warn("保存对象为空！");
             return;
         }
-        for (E e : entitys) {
-            invokeModifyInfo(e);
+        Collection<String> exs = new ArrayList<String>(entitys.size());
+        for (E entity : entitys) {
+            try {
+                invokeModifyInfo(entity);
+                entity.validate();
+            } catch (ValidateException e) {
+                exs.add(entity.getId() + "：" + e.getMessage());
+            }
         }
-        try {
-            getCommonDao().batchSave(entitys);
-        } catch (ValidateException e) {
-            throw new AppDaoException(e.getMessage());
+        if (ListUtil.isNotEmpty(exs)) {
+            throw new AppDaoException(StringUtil.join(exs, "/n"));
         }
+        getCommonDao().batchSave(entitys);
     }
 
     @Override
@@ -87,11 +93,7 @@ public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity,
         Assert.notNull(e.getId(), "id不能为空");
         if (e instanceof ModifyInfoMongoEntity) {
             ReflectionUtil.invokeSetterMethod(e, ModifyInfoMongoEntity.LOGICAL_DELETE_STATUS_PROPERTY, DateUtil.newInstanceDate(), Timestamp.class);
-            try {
-                this.getCommonDao().update(e);
-            } catch (ValidateException ex) {
-                throw new AppServiceException(ex.getMessage());
-            }
+            this.getCommonDao().update(e);
         } else {
             this.getCommonDao().delete(e);
         }
@@ -114,10 +116,6 @@ public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity,
                 throw new AppServiceException("", e);
             }
         }
-    }
-
-    @Override
-    public void evict(E e) {
     }
 
     @Override

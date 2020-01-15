@@ -1,7 +1,6 @@
 package cn.wuxia.project.common.dao;
 
 import cn.wuxia.common.entity.Base64UuidGenerator;
-import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.spring.orm.mongo.SpringDataMongoDao;
 import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.common.util.reflection.ReflectionUtil;
@@ -19,7 +18,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -41,7 +39,7 @@ public abstract class CommonMongoDao<T extends AbstractPrimaryKeyEntity, K exten
      * save , update 不能混用 update请使用 {@link #update(AbstractPrimaryKeyEntity)}
      */
     @Override
-    public void save(T entity) throws ValidateException {
+    public void save(T entity) {
         Assert.notNull(entity, "实体对象不能为空");
         if (StringUtil.isNotBlank(entity.getId())) {
             update(entity);
@@ -51,7 +49,6 @@ public abstract class CommonMongoDao<T extends AbstractPrimaryKeyEntity, K exten
             CommonMongoEntity mongoEntity = (CommonMongoEntity) entity;
             mongoEntity.setId(idvalue);
         }
-        entity.validate();
         super.save(entity);
 
     }
@@ -62,14 +59,13 @@ public abstract class CommonMongoDao<T extends AbstractPrimaryKeyEntity, K exten
      * @param entity
      * @author songlin
      */
-    public void update(T entity) throws ValidateException {
+    public void update(T entity) {
         Assert.notNull(entity, "实体对象不能为空");
         Object idvalue = entity.getId();
         if (StringUtil.isBlank(idvalue)) {
             save(entity);
             return;
         }
-        entity.validate();
         Query query = new Query(Criteria.where("id").is(idvalue));
         Update update = new Update();
         List<Field> fields = ReflectionUtil.getAccessibleFields(getEntityClass());
@@ -120,19 +116,6 @@ public abstract class CommonMongoDao<T extends AbstractPrimaryKeyEntity, K exten
         super.update(query, update);
         logger.info("完成保存, class={}，id={}", getEntityClass(), idvalue);
         entity = findById((K) entity.getId());
-    }
-
-    /**
-     * 由于部分公用信息需要赋值，则不调用mongoTemplate.batchSave
-     *
-     * @param entitys
-     */
-    @Override
-    public void batchSave(Collection<T> entitys) throws ValidateException {
-        Assert.notEmpty(entitys, "entitys不能为空");
-        for (T t : entitys) {
-            save(t);
-        }
     }
 
 

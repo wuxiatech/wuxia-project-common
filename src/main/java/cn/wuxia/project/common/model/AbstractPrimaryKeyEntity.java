@@ -1,7 +1,7 @@
 package cn.wuxia.project.common.model;
 
-import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.util.reflection.ReflectionUtil;
+import cn.wuxia.common.validator.ValidationEntity;
 import org.springframework.data.annotation.Transient;
 
 /**
@@ -9,17 +9,11 @@ import org.springframework.data.annotation.Transient;
  */
 public abstract class AbstractPrimaryKeyEntity<K> extends ValidationEntity {
 
-    private Class<K> keyType;
-
-    public AbstractPrimaryKeyEntity() {
-        this.keyType = ReflectionUtil.getSuperClassGenricType(getClass());
-    }
-
     public abstract K getId();
 
     @Transient
     @javax.persistence.Transient
     protected Class<K> getKeyType() {
-        return keyType;
+        return ReflectionUtil.getSuperClassGenricType(getClass());
     }
 }

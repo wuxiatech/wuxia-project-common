@@ -1,10 +1,7 @@
 package cn.wuxia.project.common.security;
 
-import cn.wuxia.project.common.support.CacheConstants;
-import cn.wuxia.project.common.support.CacheSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -12,8 +9,6 @@ public class UserContextUtil {
     private static Logger logger = LoggerFactory.getLogger(UserContextUtil.class);
 
     protected final static String CURRENT_SESSION_WX_USER = "CURRENT_SESSION_USER:";
-
-    protected static Cache cache = CacheSupport.getCache(CacheConstants.CACHED_VALUE_1_HOUR);
 
     public static void saveUserContext(UserContext uc) {
         RequestAttributes ra = RequestContextHolder.getRequestAttributes();

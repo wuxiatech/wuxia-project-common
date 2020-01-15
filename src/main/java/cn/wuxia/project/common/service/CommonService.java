@@ -3,11 +3,11 @@
  */
 package cn.wuxia.project.common.service;
 
-import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.exception.AppDaoException;
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.orm.query.Sort;
+import cn.wuxia.common.validator.ValidationEntity;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -66,5 +66,4 @@ public interface CommonService<E extends ValidationEntity, K extends Serializabl
 
     public List<E> find(Sort sort, Conditions... condition);
 
-    public void evict(E t);
 }

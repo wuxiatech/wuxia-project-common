@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public abstract class AbstractServiceImpl<E extends AbstractPrimaryKeyEntity, K> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected void invokeModifyInfo(E e) {
+    protected void invokeModifyInfo(AbstractPrimaryKeyEntity e) {
         /**
          * 有与框架的及部署的原因，并非在当前线程中可以拿得到用户信息，比如dubbox及webservice
          * 可以在consumer层set值

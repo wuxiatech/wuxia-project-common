@@ -4,10 +4,12 @@
 package cn.wuxia.project.common.service.impl;
 
 import cn.wuxia.common.exception.AppDaoException;
+import cn.wuxia.common.exception.ValidateException;
 import cn.wuxia.common.orm.query.Conditions;
 import cn.wuxia.common.orm.query.Pages;
 import cn.wuxia.common.orm.query.Sort;
 import cn.wuxia.common.util.ListUtil;
+import cn.wuxia.common.util.StringUtil;
 import cn.wuxia.project.common.dao.CommonDao;
 import cn.wuxia.project.common.model.AbstractPrimaryKeyEntity;
 import cn.wuxia.project.common.model.ModifyInfoEntity;
@@ -15,6 +17,7 @@ import cn.wuxia.project.common.service.CommonService;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,23 +27,39 @@ import java.util.List;
  * @author songlin.li
  * @since 2013-12-3
  */
-public abstract class CommonServiceImpl<E extends AbstractPrimaryKeyEntity, K extends Serializable>extends AbstractServiceImpl<E, K> implements CommonService<E, K> {
+public abstract class CommonServiceImpl<E extends AbstractPrimaryKeyEntity, K extends Serializable> extends AbstractServiceImpl<E, K> implements CommonService<E, K> {
 
 
     protected abstract CommonDao<E, K> getCommonDao();
 
     @Override
-    public E save(E e) throws AppDaoException {
-        invokeModifyInfo(e);
-        this.getCommonDao().saveEntity(e);
-        return e;
+    public E save(E entity) throws AppDaoException {
+        try {
+            invokeModifyInfo(entity);
+            entity.validate();
+            this.getCommonDao().save(entity);
+        } catch (Exception e) {
+            throw new AppDaoException(e);
+        }
+        return entity;
     }
 
     @Override
     public void batchSave(Collection<E> entitys) throws AppDaoException {
         Assert.notEmpty(entitys, "保存对象不能为空");
-        for (E e : entitys) {
-            invokeModifyInfo(e);
+
+
+        Collection<String> exs = new ArrayList<String>(entitys.size());
+        for (E entity : entitys) {
+            try {
+                invokeModifyInfo(entity);
+                entity.validate();
+            } catch (ValidateException e) {
+                exs.add(entity.getId() + "：" + e.getMessage());
+            }
+        }
+        if (ListUtil.isNotEmpty(exs)) {
+            throw new AppDaoException(StringUtil.join(exs, "/n"));
         }
         this.getCommonDao().batchSave(entitys);
     }
@@ -67,12 +86,6 @@ public abstract class CommonServiceImpl<E extends AbstractPrimaryKeyEntity, K ex
         } else {
             this.getCommonDao().delete(k);
         }
-    }
-
-
-    @Override
-    public void evict(E e) {
-        getCommonDao().evict(e);
     }
 
     @Override
