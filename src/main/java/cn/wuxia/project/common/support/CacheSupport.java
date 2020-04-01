@@ -57,7 +57,7 @@ public class CacheSupport {
      * @return
      * @author songlin
      */
-    private static CacheManager getCacheManager() throws Exception {
+    public static CacheManager getCacheManager() throws Exception {
         return SpringContextHolder.getBean("cacheManager");
     }
 

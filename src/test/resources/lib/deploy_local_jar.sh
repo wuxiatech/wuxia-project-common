@@ -1,5 +1,6 @@
 #mvn deploy:deploy-file -DgroupId=com.iflytek -DartifactId=Msc -Dversion=1.0 -Dpackaging=jar -Dfile=Msc.jar -Durl=http://192.168.1.10:8081/repository/maven-releases/ -DrepositoryId=daoming-releases
 mvn deploy:deploy-file -DgroupId=nl.captcha -DartifactId=simplecaptcha -Dversion=1.2.1 -Dpackaging=jar -Dfile=simplecaptcha-1.2.1.jar -Durl=https://repo.rdc.aliyun.com/repository/29962-release-ablYFt/ -DrepositoryId=rdc-releases
 mvn deploy:deploy-file -DgroupId=cn.wuxia -DartifactId=aspose-words -Dversion=15.8.0 -Dpackaging=jar -Dfile=aspose-words-15.8.0-jdk16.jar -Dclassifier=jdk16 -Durl=https://repo.rdc.aliyun.com/repository/29962-release-ablYFt/ -DrepositoryId=rdc-releases
+mvn deploy:deploy-file -DgroupId=cn.wuxia.third -DartifactId=zbus -Dversion=1.0.0-SNAPSHOT -Dpackaging=jar -Dfile=zbus-1.0.0-SNAPSHOT.jar  -Durl=https://repo.rdc.aliyun.com/repository/29962-snapshot-54IdqK/ -DrepositoryId=rdc-snapshots
 
 #mvn install:install-file -Dfile=Msc.jar -DgroupId=com.iflytek -DartifactId=Msc -Dversion=1.0 -Dpackaging=jar

@@ -32,7 +32,7 @@ public class WeatherUtil extends BaseMarketApi {
     }
 
 
-    public HttpAction queryAction = HttpAction.Action("http://jisutqybmf.market.alicloudapi.com/weather/query", HttpClientMethod.GET);
+    public HttpAction queryAction = HttpAction.action("http://jisutqybmf.market.alicloudapi.com/weather/query", HttpClientMethod.GET);
 
     /**
      * 全国3000多个省市的实时天气预报，未来7天、未来24小时天气，穿衣、运动、洗车、感冒、空气污染扩散、紫外线等指数查询接口，
@@ -70,7 +70,7 @@ public class WeatherUtil extends BaseMarketApi {
     }
 
 
-    public HttpAction queryCityAction = HttpAction.Action("http://jisutqybmf.market.alicloudapi.com/weather/city", HttpClientMethod.GET);
+    public HttpAction queryCityAction = HttpAction.action("http://jisutqybmf.market.alicloudapi.com/weather/city", HttpClientMethod.GET);
 
     /**
      * 获取城市列表
