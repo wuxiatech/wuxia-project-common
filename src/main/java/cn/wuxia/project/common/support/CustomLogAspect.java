@@ -59,7 +59,7 @@ public class CustomLogAspect extends LogAspect {
                 logger.warn(e.getMessage());
             }
         }
-        asyncTaskManager.getExecutor().execute(() -> {
+        asyncTaskManager.getSingleExecutor().execute(() -> {
             try {
                 String name = StringUtil.substringAfter(methodName, "execution(");
                 name = StringUtil.substringBeforeLast(name, ")");
