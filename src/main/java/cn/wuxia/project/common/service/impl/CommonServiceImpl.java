@@ -81,7 +81,7 @@ public abstract class CommonServiceImpl<E extends AbstractPrimaryKeyEntity, K ex
     @Override
     public void delete(K k) {// throws Exception {
         Assert.notNull(k, "id can't be null");
-        if (getCommonDao().getEntityClass().isAssignableFrom(ModifyInfoEntity.class)) {
+        if (ModifyInfoEntity.class.isAssignableFrom(getCommonDao().getEntityClass())) {
             this.getCommonDao().deleteByLogical(k);
         } else {
             this.getCommonDao().delete(k);

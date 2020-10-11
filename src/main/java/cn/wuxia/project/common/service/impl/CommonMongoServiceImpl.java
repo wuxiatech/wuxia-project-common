@@ -105,7 +105,7 @@ public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity,
         /**
          * 逻辑删
          */
-        if (getCommonDao().getEntityClass().isAssignableFrom(ModifyInfoMongoEntity.class)) {
+        if (ModifyInfoMongoEntity.class.isAssignableFrom(getCommonDao().getEntityClass())) {
             Query query = new Query(Criteria.where("id").is(k));
             Update update = Update.update(ModifyInfoMongoEntity.LOGICAL_DELETE_STATUS_PROPERTY, DateUtil.newInstanceDate());
             this.getCommonDao().update(query, update);
