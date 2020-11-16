@@ -129,7 +129,12 @@ public abstract class CommonServiceImpl<E extends AbstractPrimaryKeyEntity, K ex
 
     @Override
     public List<E> find(Conditions... conditions) {
-        return this.getCommonDao().find(this.getCommonDao().buildCriterion(conditions));
+        return this.getCommonDao().find(conditions);
+    }
+
+    @Override
+    public E findUnique(Conditions... conditions) {
+        return this.getCommonDao().findUnique(conditions);
     }
 
     @Override

@@ -160,7 +160,12 @@ public abstract class CommonMongoServiceImpl<E extends AbstractPrimaryKeyEntity,
         Pages pages = new Pages();
         pages.setConditions(ListUtil.arrayToList(condition));
         pages.setAutoCount(false);
-        return findAll(pages).getResult();
+        return this.getCommonDao().findPage(pages).getResult();
+    }
+
+    @Override
+    public E findUnique(Conditions... condition) {
+        return this.getCommonDao().findUniqueBy(condition);
     }
 
     @Override

@@ -154,4 +154,9 @@ public abstract class CommonJpaServiceImpl<E extends AbstractPrimaryKeyEntity, K
     public List<E> find(cn.wuxia.common.orm.query.Sort sort, Conditions... conditions) {
         return this.getCommonJpaDao().findBy(ListUtil.arrayToList(conditions), sort);
     }
+
+    @Override
+    public E findUnique(Conditions... condition) {
+        return this.getCommonJpaDao().findOneBy(condition);
+    }
 }

@@ -27,14 +27,14 @@ public interface CommonService<E extends ValidationEntity, K extends Serializabl
      * @param t
      * @return
      */
-    public E save(E t) throws AppDaoException;
+    E save(E t) throws AppDaoException;
 
     /**
      * 批量保存
      *
      * @param collection
      */
-    public void batchSave(Collection<E> collection) throws AppDaoException;
+    void batchSave(Collection<E> collection) throws AppDaoException;
 
     /**
      * 和save一致
@@ -42,28 +42,30 @@ public interface CommonService<E extends ValidationEntity, K extends Serializabl
      * @param t
      * @return
      */
-    public E update(E t) throws AppDaoException;
+    E update(E t) throws AppDaoException;
 
-    public void delete(E t);
+    void delete(E t);
 
-    public void delete(K k);
+    void delete(K k);
 
-    public E findById(K k);
+    E findById(K k);
 
-    public List<E> findBy(String property, Object value);
+    List<E> findBy(String property, Object value);
 
-    public E findUniqueBy(String property, Object value);
+    E findUniqueBy(String property, Object value);
 
-    public List<E> findIn(String property, Object... value);
+    List<E> findIn(String property, Object... value);
 
-    public List<E> findAll();
+    List<E> findAll();
 
-    public List<E> findAll(Sort sort);
+    List<E> findAll(Sort sort);
 
-    public Pages<E> findAll(Pages<E> pages);
+    Pages<E> findAll(Pages<E> pages);
 
-    public List<E> find(Conditions... condition);
+    List<E> find(Conditions... condition);
 
-    public List<E> find(Sort sort, Conditions... condition);
+    List<E> find(Sort sort, Conditions... condition);
+
+    E findUnique(Conditions... condition);
 
 }
